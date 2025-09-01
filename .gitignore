@@ -1,0 +1,32 @@
+# Virtual environments
+myenv/
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+__pycache__/*.pyc
+
+# Build
+dist/
+build/
+
+# Release
+Teveclub.zip
+Teveclub.7z
+Teveclub.rar
+Teveclub.exe
+
+# Credentials 
+credentials.json
+
+# IDE files
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
