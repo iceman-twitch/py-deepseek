@@ -1,0 +1,7 @@
+# Python 3.9 Compatible Versions 
+pywebview==4.2.2 
+pyinstaller==5.13.0 
+pywin32==306    # Required for PyInstaller on Windows
+pillow==9.5.0 
+requests==2.31.0 
+urllib3==1.26.16 
