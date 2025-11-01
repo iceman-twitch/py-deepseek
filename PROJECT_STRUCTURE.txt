@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""
+project_structure.txt
+
+This file documents the NEW FOLDER STRUCTURE for DeepSeek Automation Project v2.1
+
+Run via: run.bat (which activates env and runs main.py)
+"""
+
+PROJECT STRUCTURE
+─────────────────────────────────────────────────────────────────────
+
+py-deepseek/                          ← ROOT FOLDER
+│
+├─ 📄 MAIN ENTRY POINT
+│  └─ main.py                         ← ⭐ ONLY PYTHON FILE IN ROOT
+│                                        (Imports from src/ and config/)
+│
+├─ 📂 src/                            ← SOURCE CODE
+│  ├─ __init__.py
+│  ├─ browser_manager.py              ← Manages webview window
+│  ├─ credentials_manager.py          ← Handles credentials.json
+│  ├─ keyboard_automation.py          ← Types email/password
+│  ├─ login_button_detector.py        ← Detects & clicks login button ⭐
+│  └─ page_handler.py                 ← Event orchestration
+│
+├─ 📂 config/                         ← CONFIGURATION
+│  ├─ __init__.py
+│  └─ settings.py                     ← 20+ configurable options
+│
+├─ 📂 docs/                           ← DOCUMENTATION
+│  ├─ QUICKSTART.md                   ← 5-minute setup
+│  ├─ README_NEW.md                   ← Complete reference
+│  ├─ ARCHITECTURE.md                 ← Technical design
+│  ├─ LOGIN_BUTTON_DETECTION.md       ← Detection details
+│  ├─ EXAMPLES.md                     ← Usage examples
+│  ├─ PROJECT_SUMMARY.md              ← Overview
+│  ├─ MASTER_INDEX.md                 ← Navigation guide
+│  ├─ FILE_INDEX.md                   ← File reference
+│  ├─ DIAGRAMS.md                     ← Visual diagrams
+│  ├─ FINAL_REPORT.md                 ← Completion report
+│  ├─ COMPLETION_SUMMARY.md           ← Summary
+│  ├─ README.md                       ← Original
+│  └─ README_NEW.md                   ← Complete guide
+│
+├─ 📂 env/                            ← PYTHON VIRTUAL ENVIRONMENT
+│  ├─ Scripts/
+│  │  └─ activate.bat, python.exe, pip.exe, etc.
+│  └─ Lib/
+│     └─ site-packages/ (all dependencies)
+│
+├─ 📄 credentials.json                ← USER CREDENTIALS (ROOT)
+│                                        ⚠️  DO NOT MOVE - In root for easy access
+│
+├─ 📄 run.bat                         ← ⭐ START HERE
+│                                        (Activates env and runs main.py)
+│
+├─ 📄 requirements.txt                ← Dependencies
+├─ 📄 config.py                       ← OLD (legacy) - kept for reference
+├─ 📄 form.py                         ← OLD (legacy) - kept for reference
+├─ 📄 deepseek.spec                   ← PyInstaller config
+├─ 📄 LICENSE
+├─ 📄 README_SUMMARY.txt
+├─ 📄 onefile.bat
+├─ 📄 env.bat
+└─ 📂 build/, dist/ (PyInstaller output)
+
+
+HOW TO USE
+──────────────────────────────────────────────────────────────────────
+
+1. SETUP (first time)
+   ├─ Virtual environment already created in env/
+   ├─ Dependencies already installed
+   └─ Ready to go!
+
+2. RUN
+   └─ Double-click: run.bat
+      OR
+      Command line: run.bat
+      OR
+      Manual: env\Scripts\activate && py main.py
+
+3. CONFIGURE
+   └─ Edit credentials.json in ROOT folder
+      {
+          "username": "your_email@example.com",
+          "password": "your_password"
+      }
+
+4. SUCCESS
+   └─ Browser opens → Automation runs → Login complete ✅
+
+
+IMPORTS STRUCTURE
+──────────────────────────────────────────────────────────────────────
+
+main.py (root)
+  └─ from src.browser_manager import BrowserManager
+      └─ browser_manager.py (in src/)
+          ├─ from config import ... (config/settings.py)
+          └─ from .page_handler import PageHandler
+              ├─ from config import ...
+              ├─ from .credentials_manager import CredentialsManager
+              ├─ from .keyboard_automation import KeyboardAutomation
+              └─ from .login_button_detector import LoginButtonDetector
+
+
+KEY FEATURES
+──────────────────────────────────────────────────────────────────────
+
+✅ CLEAN STRUCTURE
+   ├─ Only main.py in root
+   ├─ All source code in src/
+   ├─ All config in config/
+   ├─ All docs in docs/
+   └─ credentials.json stays in root (for easy access)
+
+✅ MODULAR DESIGN (7 focused modules)
+   ├─ browser_manager.py - Browser lifecycle
+   ├─ credentials_manager.py - Credentials handling
+   ├─ keyboard_automation.py - Keyboard input
+   ├─ login_button_detector.py - Button detection ⭐
+   ├─ page_handler.py - Event handling
+   ├─ config/settings.py - Configuration
+   └─ main.py - Entry point
+
+✅ RUNS WITH run.bat
+   └─ Activates virtual environment (env/)
+   └─ Runs main.py
+   └─ Deactivates on exit
+
+✅ PROPER IMPORTS
+   ├─ src/ modules use relative imports (from .module import ...)
+   ├─ main.py uses absolute imports (from src.module import ...)
+   ├─ All config imports work correctly
+   └─ No circular dependencies
+
+
+FILE ROLES
+──────────────────────────────────────────────────────────────────────
+
+ROOT LEVEL FILES:
+  main.py              ← Entry point
+  run.bat              ← Execute this to start
+  credentials.json     ← Your login info (KEEP IN ROOT)
+  config.py            ← LEGACY (old file kept for reference)
+  form.py              ← LEGACY (old file kept for reference)
+  requirements.txt     ← Dependencies
+  deepseek.spec        ← PyInstaller config
+  env/                 ← Virtual environment with Python
+
+src/ MODULES:
+  browser_manager.py   ← Creates & manages browser window
+  page_handler.py      ← Handles page events & automation
+  credentials_manager.py ← Manages credentials loading
+  keyboard_automation.py ← Types credentials
+  login_button_detector.py ← Detects & clicks login button ⭐
+  __init__.py          ← Makes src/ a package
+
+config/ CONFIGURATION:
+  settings.py          ← 20+ customizable options
+  __init__.py          ← Makes config a package
+
+docs/ DOCUMENTATION:
+  12 markdown files    ← Complete project documentation
+
+
+VERSION INFO
+──────────────────────────────────────────────────────────────────────
+
+Version:    2.1 (Reorganized Folder Structure)
+Date:       November 1, 2025
+Status:     Production Ready ✅
+Structure:  Clean & Modular
+
+Previous:   2.0 (Monolithic in root)
+Changed to: 2.1 (Organized in folders)
+
+
+COMMANDS
+──────────────────────────────────────────────────────────────────────
+
+Start application:
+  run.bat
+
+Manual start:
+  env\Scripts\activate
+  py main.py
+  env\Scripts\deactivate
+
+Build executable:
+  pyinstaller -F --add-data "credentials.json:." main.py
+
+
+TROUBLESHOOTING
+──────────────────────────────────────────────────────────────────────
+
+If run.bat doesn't work:
+  1. Check env/ folder exists
+  2. Run: env\Scripts\activate
+  3. Run: py main.py
+  4. If error: pip install -r requirements.txt
+
+If imports fail:
+  1. Verify src/__init__.py exists
+  2. Verify config/__init__.py exists
+  3. Check you're running from project root
+  4. Verify no circular imports
+
+
+PROJECT STRUCTURE COMPLETE ✅
+──────────────────────────────────────────────────────────────────────
+
+Everything is now properly organized:
+  ✅ main.py only file in root
+  ✅ Source code in src/ folder
+  ✅ Configuration in config/ folder
+  ✅ Documentation in docs/ folder
+  ✅ credentials.json in root (for easy access)
+  ✅ Virtual environment in env/
+  ✅ run.bat runs python main.py via env
+
+The project is clean, modular, and production-ready!
+
+To start: Double-click run.bat

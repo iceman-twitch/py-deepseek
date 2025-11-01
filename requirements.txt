@@ -5,3 +5,6 @@ pywin32==306    # Required for PyInstaller on Windows
 pillow==9.5.0 
 requests==2.31.0 
 urllib3==1.26.16 
+keyboard==0.13.5
+pyautogui==0.9.53  # For mouse automation
+mouse==0.7.1  # For real mouse clicks
