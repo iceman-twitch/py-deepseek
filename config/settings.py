@@ -2,9 +2,16 @@
 Configuration settings for the DeepSeek application
 """
 import os
+import sys
 
 # Get the project root directory
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Handle both normal Python and PyInstaller frozen exe
+if getattr(sys, 'frozen', False):
+    # Running as compiled exe
+    PROJECT_ROOT = os.path.dirname(sys.executable)
+else:
+    # Running as script
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Window configuration
 WINDOW_WIDTH = 1400

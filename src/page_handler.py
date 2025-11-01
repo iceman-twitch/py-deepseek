@@ -40,28 +40,28 @@ class PageHandler:
                 var element = document.evaluate('/html/body/div[1]/div/div[2]/div[3]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (element) {
                     element.click();
-                    console.log('✅ Method 1 (XPath) - Element clicked successfully');
+                    console.log('[OK] Method 1 (XPath) - Element clicked successfully');
                     return {method: 'xpath', found: true};
                 }
-                console.log('❌ Method 1 (XPath) - Element not found');
+                console.log('[FAIL] Method 1 (XPath) - Element not found');
                 
                 // Method 2: CSS Selector - div.ds-button
                 var elem2 = document.querySelector('div.ds-button');
                 if (elem2) {
                     elem2.click();
-                    console.log('✅ Method 2 (CSS div.ds-button) - clicked');
+                    console.log('[OK] Method 2 (CSS div.ds-button) - clicked');
                     return {method: 'css_selector', found: true};
                 }
-                console.log('❌ Method 2 - not found');
+                console.log('[FAIL] Method 2 - not found');
                 
                 // Method 3: Cookie banner class
                 var elem3 = document.querySelector('.cookie_banner-accept-essential-button');
                 if (elem3) {
                     elem3.click();
-                    console.log('✅ Method 3 (cookie_banner class) - clicked');
+                    console.log('[OK] Method 3 (cookie_banner class) - clicked');
                     return {method: 'css_class', found: true};
                 }
-                console.log('❌ Method 3 - not found');
+                console.log('[FAIL] Method 3 - not found');
                 
                 // Method 4: Button with "necessary" text
                 var buttons = document.querySelectorAll('button');
@@ -69,11 +69,11 @@ class PageHandler:
                     var text = buttons[i].textContent.toLowerCase();
                     if (text.includes('necessary') || text.includes('only')) {
                         buttons[i].click();
-                        console.log('✅ Method 4 (button text) - clicked');
+                        console.log('[OK] Method 4 (button text) - clicked');
                         return {method: 'button_text', found: true};
                     }
                 }
-                console.log('❌ Method 4 - no button with necessary text');
+                console.log('[FAIL] Method 4 - no button with necessary text');
                 
                 // Method 5: Any DIV with "necessary" text
                 var allDivs = document.querySelectorAll('div');
@@ -81,13 +81,13 @@ class PageHandler:
                     var text = allDivs[i].textContent.toLowerCase();
                     if (text.includes('necessary') && text.length < 100) {
                         allDivs[i].click();
-                        console.log('✅ Method 5 (div text) - clicked');
+                        console.log('[OK] Method 5 (div text) - clicked');
                         return {method: 'div_text', found: true};
                     }
                 }
-                console.log('❌ Method 5 - no div with necessary text');
+                console.log('[FAIL] Method 5 - no div with necessary text');
                 
-                console.log('⚠️ No cookie banner found with any method');
+                console.log('[WARN] No cookie banner found with any method');
                 return {method: 'not_found', found: false};
                 
             } catch (e) {
@@ -98,11 +98,11 @@ class PageHandler:
         """
         
         try:
-            print("🍪 Detecting cookie banner (trying all methods)...")
+            print("[COOKIE] Detecting cookie banner (trying all methods)...")
             result = self.window.evaluate_js(js_code)
             
             if result and result.get('found'):
-                print(f"✅ Cookie banner clicked!")
+                print(f"[SUCCESS] Cookie banner clicked!")
                 print(f"   Method: {result.get('method', 'unknown')}")
                 time.sleep(COOKIE_PROCESSING_DELAY)
                 time.sleep(1.0)
@@ -182,13 +182,13 @@ class PageHandler:
         
         # Start credential entry in a separate thread
         if self.credentials_manager.is_valid():
-            print("🔐 Starting credential entry automation...")
+            print("[AUTH] Starting credential entry automation...")
             threading.Thread(
                 target=self.enter_credentials_and_login,
                 daemon=True
             ).start()
         else:
-            print("❌ Credentials are not valid")
+            print("[ERROR] Credentials are not valid")
     
     def enter_credentials_and_login(self):
         """Enter credentials and attempt to login"""
@@ -198,32 +198,32 @@ class PageHandler:
             password = self.credentials_manager.get_password()
             
             if not email or not password:
-                print("❌ Missing email or password")
+                print("[ERROR] Missing email or password")
                 return
             
             # Type email
             success = self.keyboard_automation.type_email(self.window, email)
             if not success:
-                print("❌ Failed to enter email")
+                print("[ERROR] Failed to enter email")
                 return
             
-            print("✅ Email entered")
+            print("[SUCCESS] Email entered")
             time.sleep(0.5)
             
             # Type password
             success = self.keyboard_automation.type_password(self.window, password)
             if not success:
-                print("❌ Failed to enter password")
+                print("[ERROR] Failed to enter password")
                 return
             
-            print("✅ Password entered")
+            print("[SUCCESS] Password entered")
             
             # Wait 1 second after typing password (async wait, no validation check)
-            print("⏳ Waiting 1 second for form to process...")
+            print("[INFO] Waiting 1 second for form to process...")
             time.sleep(1.0)
             
-            print("✅ All credentials entered successfully!")
-            print("👉 Attempting to locate and click login button...")
+            print("[SUCCESS] All credentials entered successfully!")
+            print("[INFO] Attempting to locate and click login button...")
             
             # Try to auto-click login button (no validation, just click)
             self.login_detector.auto_click_after_credentials(

@@ -40,28 +40,28 @@ class LoginButtonDetector:
                 var element = document.evaluate('/html/body/div[1]/div/div[1]/div[2]/div/div/div[2]/div/div[5]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (element) {
                     element.click();
-                    console.log('✅ Method 1 (XPath) - Element clicked successfully');
+                    console.log('[OK] Method 1 (XPath) - Element clicked successfully');
                     return {method: 'xpath', found: true};
                 }
-                console.log('❌ Method 1 (XPath) - Element not found');
+                console.log('[FAIL] Method 1 (XPath) - Element not found');
                 
                 // Method 2: CSS - div.ds-button
                 var btn2 = document.querySelector('div.ds-button');
                 if (btn2) {
                     btn2.click();
-                    console.log('✅ Method 2 (CSS div.ds-button) - clicked');
+                    console.log('[OK] Method 2 (CSS div.ds-button) - clicked');
                     return {method: 'css_selector', found: true};
                 }
-                console.log('❌ Method 2 - not found');
+                console.log('[FAIL] Method 2 - not found');
                 
                 // Method 3: Register button class
                 var btn3 = document.querySelector('.ds-sign-up-form__register-button');
                 if (btn3) {
                     btn3.click();
-                    console.log('✅ Method 3 (register-button class) - clicked');
+                    console.log('[OK] Method 3 (register-button class) - clicked');
                     return {method: 'css_class', found: true};
                 }
-                console.log('❌ Method 3 - not found');
+                console.log('[FAIL] Method 3 - not found');
                 
                 // Method 4: Search by text "Log in"
                 var allElements = document.querySelectorAll('*');
@@ -69,24 +69,24 @@ class LoginButtonDetector:
                     var text = allElements[i].textContent.toLowerCase().trim();
                     if (text === 'log in') {
                         allElements[i].click();
-                        console.log('✅ Method 4 (exact text) - clicked');
+                        console.log('[OK] Method 4 (exact text) - clicked');
                         return {method: 'text_exact', found: true};
                     }
                 }
-                console.log('❌ Method 4 - not found');
+                console.log('[FAIL] Method 4 - not found');
                 
                 // Method 5: Keywords search
                 for (var i = 0; i < allElements.length; i++) {
                     var text = allElements[i].textContent.toLowerCase();
                     if ((text.includes('log') || text.includes('sign') || text.includes('login')) && text.length < 50) {
                         allElements[i].click();
-                        console.log('✅ Method 5 (keyword) - clicked');
+                        console.log('[OK] Method 5 (keyword) - clicked');
                         return {method: 'keyword', found: true};
                     }
                 }
-                console.log('❌ Method 5 - not found');
+                console.log('[FAIL] Method 5 - not found');
                 
-                console.log('⚠️ No login button found with any method');
+                console.log('[WARN] No login button found with any method');
                 return {method: 'not_found', found: false};
                 
             } catch (e) {
@@ -99,12 +99,12 @@ class LoginButtonDetector:
         try:
             result = self.window.evaluate_js(detect_js)
             if result and result.get('found'):
-                print(f"✅ Login button found and clicked!")
+                print(f"[SUCCESS] Login button found and clicked!")
                 print(f"   Method: {result.get('method', 'unknown')}")
                 self.login_button_found = True
                 return True
             else:
-                print("❌ Login button not found")
+                print("[ERROR] Login button not found")
                 return False
         except Exception as e:
             print(f"Error detecting button: {e}")
@@ -171,10 +171,10 @@ class LoginButtonDetector:
             
             # Validate credentials are entered
             if not credentials_callback():
-                print("❌ Credentials not properly entered")
+                print("[ERROR] Credentials not properly entered")
                 return False
             
-            print("✅ Credentials validated, attempting to click login button...")
+            print("[SUCCESS] Credentials validated, attempting to click login button...")
             
             # Wait a moment before clicking
             time.sleep(0.5)
