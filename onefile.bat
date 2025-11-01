@@ -8,8 +8,8 @@ if exist build rmdir /s /q build
 echo ✅ Cleanup complete!
 
 echo.
-echo Running PyInstaller on form.py...
-pyinstaller --onefile --windowed --name "deepseek" --icon="icon.ico" form.py
+echo Running PyInstaller on main.py...
+pyinstaller --onefile --windowed --name "deepseek" --icon="icon.ico" main.py
 
 echo.
 echo Build complete! Check the 'dist' folder for your executable.
