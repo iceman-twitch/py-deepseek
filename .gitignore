@@ -23,8 +23,15 @@ Teveclub.exe
 *deepseek.zip
 deepseek.zip
 
-# Credentials 
+# Credentials
 credentials.json
+
+# Logs
+*.log
+deepseek_error.log
+
+# Webview session/cookie storage
+.webview_data/
 
 # IDE files
 .vscode/

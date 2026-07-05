@@ -1,6 +1,7 @@
 """
 Browser manager module for creating and managing the webview window
 """
+import os
 import webview
 import traceback
 from config import (
@@ -9,21 +10,17 @@ from config import (
     MIN_WIDTH,
     MIN_HEIGHT,
     DEEPSEEK_URL,
-    WINDOW_TITLE
+    WINDOW_TITLE,
+    PROJECT_ROOT
 )
 from .page_handler import PageHandler
 from .credentials_manager import CredentialsManager
+from .logger import log
 
 
 def log_error(message):
-    """Log error to file for debugging"""
-    try:
-        from datetime import datetime
-        with open('deepseek_error.log', 'a', encoding='utf-8') as f:
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"[{timestamp}] {message}\n")
-    except:
-        pass
+    """Log a message to the console and deepseek_error.log."""
+    log(message)
 
 
 class BrowserManager:
@@ -66,6 +63,8 @@ class BrowserManager:
                 height=WINDOW_HEIGHT,
                 min_size=(MIN_WIDTH, MIN_HEIGHT)
             )
+            # Persist cookies/session so login is remembered between runs
+            # (private_mode is disabled below in start()).
             
             log_error("[BrowserManager] Window created successfully")
             
@@ -92,7 +91,11 @@ class BrowserManager:
         if self.window:
             try:
                 log_error("[BrowserManager] Starting webview...")
-                webview.start()
+                # private_mode=False + a storage_path make the webview persist
+                # cookies, localStorage and the login session across restarts.
+                storage_path = os.path.join(PROJECT_ROOT, '.webview_data')
+                os.makedirs(storage_path, exist_ok=True)
+                webview.start(private_mode=False, storage_path=storage_path)
                 log_error("[BrowserManager] Webview started successfully")
             except Exception as e:
                 log_error(f"[BrowserManager] Error starting webview: {e}\n{traceback.format_exc()}")

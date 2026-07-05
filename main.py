@@ -10,20 +10,14 @@ This application automates login to DeepSeek chat by:
 6. Clicking the login button
 """
 
-import sys
 import traceback
-from datetime import datetime
 from src.browser_manager import BrowserManager
+from src.logger import log
 
 
 def log_error(message):
-    """Log error to file for debugging exe issues"""
-    try:
-        with open('deepseek_error.log', 'a', encoding='utf-8') as f:
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"[{timestamp}] {message}\n")
-    except:
-        pass  # Silently fail if we can't write log
+    """Log a message to deepseek_error.log (also mirrored to console)."""
+    log(message, to_console=False)
 
 
 def main_method():

@@ -8,6 +8,7 @@ from config import COOKIE_HANDLER_DELAY, COOKIE_PROCESSING_DELAY
 from .credentials_manager import CredentialsManager
 from .keyboard_automation import KeyboardAutomation
 from .login_button_detector import LoginButtonDetector
+from .logger import log
 
 
 class PageHandler:
@@ -24,6 +25,12 @@ class PageHandler:
         self.credentials_manager = CredentialsManager()
         self.keyboard_automation = KeyboardAutomation()
         self.login_detector = LoginButtonDetector(window)
+
+        # Guard so credentials are only entered once. The webview 'loaded'
+        # event fires on every navigation/reload, and without this guard each
+        # fire spawns another typing thread, causing doubled/duplicated input.
+        self._automation_started = False
+        self._automation_lock = threading.Lock()
         
         # Load credentials
         if not self.credentials_manager.load_credentials():
@@ -34,85 +41,102 @@ class PageHandler:
         js_code = """
         (function() {
             try {
-                console.log('=== COOKIE DETECTION DEBUG ===');
-                
-                // Method 1: Direct XPath and click
-                var element = document.evaluate('/html/body/div[1]/div/div[2]/div[3]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                if (element) {
-                    element.click();
-                    console.log('[OK] Method 1 (XPath) - Element clicked successfully');
-                    return {method: 'xpath', found: true};
-                }
-                console.log('[FAIL] Method 1 (XPath) - Element not found');
-                
-                // Method 2: CSS Selector - div.ds-button
-                var elem2 = document.querySelector('div.ds-button');
-                if (elem2) {
-                    elem2.click();
-                    console.log('[OK] Method 2 (CSS div.ds-button) - clicked');
-                    return {method: 'css_selector', found: true};
-                }
-                console.log('[FAIL] Method 2 - not found');
-                
-                // Method 3: Cookie banner class
-                var elem3 = document.querySelector('.cookie_banner-accept-essential-button');
-                if (elem3) {
-                    elem3.click();
-                    console.log('[OK] Method 3 (cookie_banner class) - clicked');
-                    return {method: 'css_class', found: true};
-                }
-                console.log('[FAIL] Method 3 - not found');
-                
-                // Method 4: Button with "necessary" text
-                var buttons = document.querySelectorAll('button');
-                for (var i = 0; i < buttons.length; i++) {
-                    var text = buttons[i].textContent.toLowerCase();
-                    if (text.includes('necessary') || text.includes('only')) {
-                        buttons[i].click();
-                        console.log('[OK] Method 4 (button text) - clicked');
-                        return {method: 'button_text', found: true};
+                // Phrases (lowercase) that identify the "only necessary cookies"
+                // / terms-accept button. Hungarian variants included first so the
+                // correct button ("csak szükséges sütik") wins over generic ones.
+                var phrases = [
+                    'csak szükséges sütik',
+                    'csak a szükséges',
+                    'csak szükséges',
+                    'szükséges sütik',
+                    'csak az elengedhetetlen',
+                    'only necessary',
+                    'necessary only',
+                    'accept necessary',
+                    'accept only necessary',
+                    'reject all',
+                    'accept essential'
+                ];
+
+                // Collect every clickable-ish element and its trimmed text.
+                var candidates = document.querySelectorAll(
+                    'button, div, span, a, [role="button"]'
+                );
+
+                // Pass 1: exact/priority text match on the clickable itself.
+                for (var p = 0; p < phrases.length; p++) {
+                    for (var i = 0; i < candidates.length; i++) {
+                        var el = candidates[i];
+                        var text = (el.textContent || '').trim().toLowerCase();
+                        // Keep it short so we match the button, not a whole banner.
+                        if (text.length > 0 && text.length < 60 &&
+                            text.indexOf(phrases[p]) !== -1) {
+                            el.click();
+                            return {
+                                found: true,
+                                method: 'text_match',
+                                phrase: phrases[p],
+                                text: (el.textContent || '').trim()
+                            };
+                        }
                     }
                 }
-                console.log('[FAIL] Method 4 - no button with necessary text');
-                
-                // Method 5: Any DIV with "necessary" text
-                var allDivs = document.querySelectorAll('div');
-                for (var i = 0; i < allDivs.length; i++) {
-                    var text = allDivs[i].textContent.toLowerCase();
-                    if (text.includes('necessary') && text.length < 100) {
-                        allDivs[i].click();
-                        console.log('[OK] Method 5 (div text) - clicked');
-                        return {method: 'div_text', found: true};
-                    }
+
+                // Pass 2: known essential-cookie CSS class.
+                var essential = document.querySelector('.cookie_banner-accept-essential-button');
+                if (essential) {
+                    essential.click();
+                    return {found: true, method: 'css_essential', text: (essential.textContent || '').trim()};
                 }
-                console.log('[FAIL] Method 5 - no div with necessary text');
-                
-                console.log('[WARN] No cookie banner found with any method');
-                return {method: 'not_found', found: false};
-                
+
+                // Not found - gather the visible button texts for diagnostics.
+                var texts = [];
+                for (var j = 0; j < candidates.length; j++) {
+                    var t = (candidates[j].textContent || '').trim();
+                    if (t.length > 0 && t.length < 60) texts.push(t);
+                }
+                // Deduplicate and cap the list.
+                var seen = {}, uniq = [];
+                for (var k = 0; k < texts.length && uniq.length < 25; k++) {
+                    if (!seen[texts[k]]) { seen[texts[k]] = 1; uniq.push(texts[k]); }
+                }
+                return {found: false, method: 'not_found', buttonTexts: uniq};
+
             } catch (e) {
-                console.error('Error:', e.message);
                 return {method: 'error', found: false, error: e.message};
             }
         })();
         """
         
         try:
-            print("[COOKIE] Detecting cookie banner (trying all methods)...")
+            try:
+                current_url = self.window.get_current_url()
+            except Exception:
+                current_url = 'unknown'
+            log(f"[SITE] Fetched page: {current_url}")
+            log("[COOKIE] Detecting cookie/terms accept banner (trying all methods)...")
             result = self.window.evaluate_js(js_code)
-            
+
             if result and result.get('found'):
-                print(f"[SUCCESS] Cookie banner clicked!")
-                print(f"   Method: {result.get('method', 'unknown')}")
+                log("[COOKIE] Cookie/terms accept banner clicked!")
+                log(f"[COOKIE] Method used: {result.get('method', 'unknown')}")
+                if result.get('text'):
+                    log(f"[COOKIE] Button text: \"{result.get('text')}\"")
+                if result.get('phrase'):
+                    log(f"[COOKIE] Matched phrase: \"{result.get('phrase')}\"")
                 time.sleep(COOKIE_PROCESSING_DELAY)
                 time.sleep(1.0)
                 return True
             else:
-                print("⚠️  Cookie banner not found with any method")
+                log("[COOKIE] Cookie banner not found with any method (continuing anyway)")
+                if result and result.get('error'):
+                    log(f"[COOKIE] JS error: {result.get('error')}")
+                if result and result.get('buttonTexts'):
+                    log(f"[COOKIE] Clickable texts seen on page: {result.get('buttonTexts')}")
                 return True  # Continue anyway
-                
+
         except Exception as e:
-            print(f"⚠️  Error: {e}")
+            log(f"[ERROR] Cookie banner handling error: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -170,11 +194,18 @@ class PageHandler:
                 return result.get('bothFilled', False)
             return False
         except Exception as e:
-            print(f"Error validating credentials: {e}")
+            log(f"[ERROR] Error validating credentials: {e}")
             return False
     
     def on_page_loaded(self):
         """Handle page loaded event"""
+        # Only run the automation once, even if 'loaded' fires multiple times.
+        with self._automation_lock:
+            if self._automation_started:
+                log("[INFO] Automation already ran, skipping duplicate page-load event")
+                return
+            self._automation_started = True
+
         time.sleep(COOKIE_HANDLER_DELAY)
         
         # Handle cookie banner
@@ -182,13 +213,13 @@ class PageHandler:
         
         # Start credential entry in a separate thread
         if self.credentials_manager.is_valid():
-            print("[AUTH] Starting credential entry automation...")
+            log("[AUTH] Starting credential entry automation...")
             threading.Thread(
                 target=self.enter_credentials_and_login,
                 daemon=True
             ).start()
         else:
-            print("[ERROR] Credentials are not valid")
+            log("[ERROR] Credentials are not valid")
     
     def enter_credentials_and_login(self):
         """Enter credentials and attempt to login"""
@@ -198,32 +229,35 @@ class PageHandler:
             password = self.credentials_manager.get_password()
             
             if not email or not password:
-                print("[ERROR] Missing email or password")
+                log("[ERROR] Missing email or password")
                 return
-            
+
             # Type email
             success = self.keyboard_automation.type_email(self.window, email)
             if not success:
-                print("[ERROR] Failed to enter email")
+                log("[ERROR] Failed to enter email")
                 return
-            
-            print("[SUCCESS] Email entered")
+
+            log("[SUCCESS] Email entered")
+            # Give the form a moment before moving to the password field.
             time.sleep(0.5)
-            
-            # Type password
+
+            # Type password. type_password() verifies the password field is
+            # actually focused before typing, so the password can never end up
+            # in the email input.
             success = self.keyboard_automation.type_password(self.window, password)
             if not success:
-                print("[ERROR] Failed to enter password")
+                log("[ERROR] Failed to enter password (password field not focused) - aborting")
                 return
-            
-            print("[SUCCESS] Password entered")
-            
+
+            log("[SUCCESS] Password entered")
+
             # Wait 1 second after typing password (async wait, no validation check)
-            print("[INFO] Waiting 1 second for form to process...")
+            log("[INFO] Waiting 1 second for form to process...")
             time.sleep(1.0)
-            
-            print("[SUCCESS] All credentials entered successfully!")
-            print("[INFO] Attempting to locate and click login button...")
+
+            log("[SUCCESS] All credentials entered successfully!")
+            log("[INFO] Attempting to locate and click login button...")
             
             # Try to auto-click login button (no validation, just click)
             self.login_detector.auto_click_after_credentials(
@@ -231,4 +265,4 @@ class PageHandler:
             )
             
         except Exception as e:
-            print(f"Error during credential entry and login: {e}")
+            log(f"[ERROR] Error during credential entry and login: {e}")
